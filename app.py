@@ -5,30 +5,28 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# MASTER OWNER PASSCODE
 OWNER_PASSCODE = "owner123"
 
-# UPLOAD DIRECTORY
 UPLOAD_FOLDER = 'uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# IN-MEMORY USER DATABASE (Owner can inspect this)
+# USER REGISTRY
 users_db = [
     {
         "id": 1,
-        "name": "Owner Admin",
-        "email": "admin@nagarbani.com",
+        "name": "Nagar Bani Owner",
+        "email": "owner@nagarbani.com",
         "type": "Master Owner",
-        "joined": "Jan 1, 2026",
+        "joined": "Aug 01, 2026",
         "last_login_ip": "127.0.0.1"
     }
 ]
 
-# INITIAL 2026 NEWS FEED DATA
+# INITIAL VERIFIED NEWS ARTICLES
 news_articles = [
     {
-        "id": 1,
+        "id": 101,
         "title": "Punjab Digital Infrastructure Plan 2026 Announced",
         "category": "Punjab News",
         "date": "Aug 09, 2026",
@@ -36,10 +34,11 @@ news_articles = [
         "body": "In a major announcement today, new digital media grants and high-speed fiber connectivity projects were greenlit across Sri Muktsar Sahib and surrounding districts. The initiative aims to connect local news portals directly with public administration feeds.",
         "media_url": "https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=800&q=80",
         "media_type": "image",
-        "views": 1420
+        "views": 1420,
+        "verified": True
     },
     {
-        "id": 2,
+        "id": 102,
         "title": "Giddarbaha Canal Renovation Completed Ahead of Schedule",
         "category": "Local News",
         "date": "Jul 24, 2026",
@@ -47,18 +46,8 @@ news_articles = [
         "body": "Local agricultural authorities confirmed that essential canal maintenance has finished weeks before the target deadline. Farmers across the district expressed satisfaction with the boosted flow rates.",
         "media_url": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
         "media_type": "image",
-        "views": 890
-    },
-    {
-        "id": 3,
-        "title": "Special Video Report: Regional Sports Meet 2026 Highlights",
-        "category": "Video Report",
-        "date": "Jun 12, 2026",
-        "summary": "Watch key moments from the Muktsar Youth Athletics Competition...",
-        "body": "Over 500 young athletes participated in this year's regional sports championship. Watch our video coverage highlighting track event finals and trophy presentations.",
-        "media_url": "https://www.w3schools.com/html/mov_bbb.mp4",
-        "media_type": "video",
-        "views": 2300
+        "views": 890,
+        "verified": True
     }
 ]
 
@@ -70,8 +59,7 @@ def home():
 def serve_upload(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
-# --- AUTHENTICATION ENDPOINTS ---
-
+# AUTHENTICATION
 @app.route('/api/signup', methods=['POST'])
 def signup():
     data = request.json or {}
@@ -83,23 +71,22 @@ def signup():
     if not email:
         return jsonify({"status": "fail", "message": "Email is required"}), 400
 
-    # Check if user exists
     for u in users_db:
         if u['email'] == email:
-            return jsonify({"status": "fail", "message": "Account already exists with this email!"}), 400
+            return jsonify({"status": "fail", "message": "Account already exists!"}), 400
 
     user_ip = request.remote_addr or "Unknown IP"
     new_user = {
         "id": len(users_db) + 1,
-        "name": name or "Anonymous User",
+        "name": name or "Reader",
         "email": email,
-        "password": password if auth_provider == 'Standard Password' else '[Google Auth OAuth Token]',
+        "password": password if auth_provider == 'Standard Password' else '[OAuth Token]',
         "provider": auth_provider,
         "joined": datetime.now().strftime("%b %d, %Y - %H:%M"),
         "last_login_ip": user_ip
     }
     users_db.append(new_user)
-    return jsonify({"status": "success", "message": "Account Created Successfully!", "user": new_user})
+    return jsonify({"status": "success", "message": "Account Created!", "user": new_user})
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -108,7 +95,6 @@ def login():
     email = data.get('email', '').strip()
     password = data.get('password', '').strip()
 
-    # OWNER MASTER LOGIN
     if passcode == OWNER_PASSCODE:
         return jsonify({
             "status": "success",
@@ -117,28 +103,19 @@ def login():
             "users_registry": users_db
         })
 
-    # REGULAR USER LOGIN
     for u in users_db:
         if u['email'] == email and u.get('password') == password:
             u['last_login_ip'] = request.remote_addr or "Unknown IP"
             return jsonify({"status": "success", "role": "user", "message": f"Welcome back {u['name']}!", "user": u})
 
-    return jsonify({"status": "fail", "message": "Invalid Credentials or Incorrect Passcode"}), 401
+    return jsonify({"status": "fail", "message": "Invalid Credentials or Passcode"}), 401
 
-@app.route('/api/get_users', methods=['POST'])
-def get_users():
-    data = request.json or {}
-    if data.get('passcode') == OWNER_PASSCODE:
-        return jsonify({"status": "success", "users": users_db})
-    return jsonify({"status": "fail", "message": "Unauthorized"}), 403
-
-# --- NEWS FEED ENDPOINTS ---
-
+# PUBLISH NEWS
 @app.route('/api/publish', methods=['POST'])
 def publish_news():
     passcode = request.form.get('passcode', '').strip()
     if passcode != OWNER_PASSCODE:
-        return jsonify({"status": "fail", "message": "Unauthorized: Owner Passcode Required"}), 403
+        return jsonify({"status": "fail", "message": "Unauthorized"}), 403
 
     title = request.form.get('title', '').strip()
     category = request.form.get('category', 'General').strip()
@@ -162,7 +139,7 @@ def publish_news():
             media_type = 'video'
 
     article = {
-        "id": len(news_articles) + 1,
+        "id": int(time.time()),
         "title": title,
         "category": category,
         "date": datetime.now().strftime("%b %d, %Y"),
@@ -170,11 +147,26 @@ def publish_news():
         "body": body,
         "media_url": media_url,
         "media_type": media_type,
-        "views": 1
+        "views": 1,
+        "verified": True
     }
 
     news_articles.insert(0, article)
     return jsonify({"status": "success", "message": "News Published to Feed!"})
+
+# DELETE NEWS (OWNER ONLY)
+@app.route('/api/delete_news', methods=['POST'])
+def delete_news():
+    data = request.json or {}
+    passcode = data.get('passcode', '').strip()
+    article_id = data.get('article_id')
+
+    if passcode != OWNER_PASSCODE:
+        return jsonify({"status": "fail", "message": "Unauthorized"}), 403
+
+    global news_articles
+    news_articles = [a for a in news_articles if a['id'] != article_id]
+    return jsonify({"status": "success", "message": "Article deleted permanently!"})
 
 @app.route('/api/get_news')
 def get_news():
