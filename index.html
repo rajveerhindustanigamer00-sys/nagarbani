@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nagarbani News - Official Portal</title>
+    <!-- Linking CSS from the static folder as required by Flask -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+    <!-- Header Section: Mimicking a Government Portal -->
+    <header class="main-header">
+        <div class="logo-area">
+            <h1> NAGARBANI NEWS</h1>
+            <p>Official Digital Portal for Local Reports and Announcements</p>
+        </div>
+        <nav class="top-nav">
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="#">Announcements</a></li>
+                <li><a href="#">Public Utilities</a></li>
+                <li><a href="/news/contact-us">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Breaking News Ticker (Inspired by Sri Muktsar Sahib site) -->
+    <div class="news-ticker">
+        <span class="ticker-label">LATEST:</span>
+        <marquee behavior="scroll" direction="left">
+            Quotation invited for Local Projects... New Canal Construction Notification... Stay tuned for Nagarbani News updates...
+        </marquee>
+    </div>
+
+    <main class="content-wrapper">
+        
+        <!-- Sidebar for Quick Links and Info -->
+        <aside class="sidebar">
+            <h3>Quick Links</h3>
+            <ul>
+                <li><a href="#">District at a Glance</a></li>
+                <li><a href="#">Helpline Numbers</a></li>
+                <li><a href="#">Voter Services</a></li>
+            </ul>
+            <div class="district-info">
+                <h4>Local Stats</h4>
+                <p>Literacy Rate: 75.15%</p>
+                <p>Pin Code: 152101</p>
+            </div>
+        </aside>
+
+        <!-- Main News & Video Area -->
+        <section class="main-content">
+            
+            <!-- Login/Access Area -->
+            <div id="login-section" class="card">
+                <h2>Admin Login</h2>
+                <p>Enter secret key to publish news or upload videos.</p>
+                <input type="password" id="password" placeholder="Enter Password">
+                <button onclick="checkAccess()">Access Portal</button>
+            </div>
+
+            <!-- Upload Dashboard (Hidden until login) -->
+            <div id="admin-dashboard" style="display: none;">
+                <div class="card publish-card">
+                    <h2>Publish New Content</h2>
+                    <input type="text" id="headline-input" placeholder="Headline (e.g., Local-Market-Update)">
+                    <textarea id="news-input" placeholder="Write the news body here..."></textarea>
+                    <label for="video-input">Attach Video Report:</label>
+                    <input type="file" id="video-input" accept="video/*">
+                    <button class="btn-publish" onclick="uploadContent()">Post News & Video</button>
+                </div>
+            </div>
+
+            <!-- The "Fancy" Video Gallery (Inspired by District Video Gallery) -->
+            <div class="gallery-header">
+                <h2>Video Gallery & News Feed</h2>
+            </div>
+            <div id="video-gallery" class="gallery-grid">
+                <!-- Videos will appear here automatically via script.js -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>Copyright © 2026 Nagarbani News. Developed for Local Administration Support.</p>
+        <p>Last Updated: Aug 09, 2026</p>
+    </footer>
+
+    <!-- Script linking from static folder -->
+    <script src="/static/script.js"></script>
+</body>
+</html>
