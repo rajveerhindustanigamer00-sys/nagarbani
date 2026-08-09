@@ -3,71 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Chat</title>
+    <title>NAGARBANI DIGITAL PORTAL - 2026 News Feed</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <!-- LOGIN PANEL -->
-    <div id="login-section" class="center-wrapper">
-        <div class="card login-card">
-            <h2>💬 Family Chat</h2>
-            <p>Enter your name & passcode to join</p>
-            <input type="text" id="username-input" placeholder="Your Name (e.g. Papa, Rajveer)">
-            <input type="password" id="passcode-input" placeholder="Passcode (Owner or Member)">
-            <button onclick="joinChat()">Join Room</button>
+    <!-- TOP BAR -->
+    <div class="top-header">
+        <div class="container top-flex">
+            <div><i class="fa-regular fa-calendar"></i> <span id="live-date">Sunday, Aug 9, 2026</span></div>
+            <div id="user-status-bar">
+                <button class="auth-btn" onclick="openAuthModal('login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
+                <button class="auth-btn register-btn" onclick="openAuthModal('signup')"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
+            </div>
         </div>
     </div>
 
-    <!-- MAIN CHAT INTERFACE -->
-    <div id="chat-section" class="chat-app" style="display: none;">
-        <header class="chat-navbar">
-            <div class="user-info">
-                <span class="avatar">👨‍👩‍👧‍👦</span>
-                <div>
-                    <h3 id="user-display-name">Family Group</h3>
-                    <small id="user-role-badge" class="badge">Member</small>
-                </div>
+    <!-- MAIN BRAND HEADER -->
+    <header class="brand-header">
+        <div class="container header-flex">
+            <div class="logo">
+                <h1>NAGARBANI <span>NEWS</span></h1>
+                <p>2026 Digital Media & Local News Portal</p>
             </div>
-            <div class="nav-actions">
-                <button id="owner-panel-btn" class="btn-owner" onclick="toggleAdminPanel()" style="display: none;">👑 Owner Controls</button>
-                <button class="btn-logout" onclick="leaveChat()">Leave</button>
-            </div>
-        </header>
-
-        <!-- OWNER ADMIN PANEL MODAL -->
-        <div id="admin-panel" class="admin-panel" style="display: none;">
-            <h3>👑 Owner Dashboard (User Activity & Logs)</h3>
-            <div id="admin-user-list" class="user-list">
-                <!-- User logs loaded here -->
+            <div class="master-badge" id="owner-badge" style="display:none;">
+                <i class="fa-solid fa-crown"></i> OWNER MASTER ACCOUNT ACTIVE
             </div>
         </div>
+    </header>
 
-        <!-- MESSAGES DISPLAY AREA -->
-        <main id="chat-box" class="chat-body">
-            <!-- Messages render here -->
+    <!-- NAV BAR -->
+    <nav class="nav-bar">
+        <div class="container nav-flex">
+            <a href="#" class="active"><i class="fa-solid fa-house"></i> Home</a>
+            <a href="#news-feed">2026 Feed</a>
+            <a href="#video-feed">Video Reports</a>
+            <a href="#owner-panel-section" id="nav-owner-link" style="display:none;"><i class="fa-solid fa-user-gear"></i> Owner Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- TICKER -->
+    <div class="ticker-box container">
+        <span class="ticker-label">BREAKING 2026</span>
+        <marquee behavior="scroll" direction="left" id="ticker-text">
+            Welcome to Nagarbani Digital News • Log in to read full stories or sign up with Google • Owner panel enabled...
+        </marquee>
+    </div>
+
+    <!-- MAIN PORTAL BODY -->
+    <div class="container portal-grid">
+        
+        <!-- MAIN NEWS CONTENT -->
+        <main class="left-column">
+            
+            <!-- FEATURED HERO STORY -->
+            <section class="hero-card" id="hero-story">
+                <span class="badge" id="hero-cat">TOP NEWS</span>
+                <h2 id="hero-title">Loading Featured Story...</h2>
+                <div class="meta" id="hero-meta"><i class="fa-regular fa-clock"></i> Aug 2026</div>
+                <div id="hero-media-wrap"></div>
+                <p id="hero-summary">Fetching the latest 2026 news articles...</p>
+                <button class="btn-read-more" onclick="openLeadModal()">Read Full Story <i class="fa-solid fa-arrow-right"></i></button>
+            </section>
+
+            <!-- OWNER DASHBOARD & PUBLISHER (Hidden until Owner Logs In) -->
+            <section id="owner-panel-section" class="panel-box" style="display: none;">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-user-shield"></i> OWNER MASTER CONTROL PANEL</h3>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('pub-tab')">Publish News</button>
+                    <button class="tab-btn" onclick="switchTab('users-tab')">Registered Users Data</button>
+                </div>
+
+                <!-- TAB 1: PUBLISH NEWS -->
+                <div id="pub-tab" class="tab-content">
+                    <h4>Post New Article / Video</h4>
+                    <input type="text" id="post-title" placeholder="Story Headline">
+                    <div class="inline-inputs">
+                        <select id="post-cat">
+                            <option value="Punjab News">Punjab News</option>
+                            <option value="Local News">Local News</option>
+                            <option value="Video Report">Video Report</option>
+                            <option value="Government Notice">Government Notice</option>
+                        </select>
+                        <input type="file" id="post-file" accept="image/*,video/*">
+                    </div>
+                    <textarea id="post-summary" rows="2" placeholder="Short Summary (shown in feed)..."></textarea>
+                    <textarea id="post-body" rows="5" placeholder="Full Article Body..."></textarea>
+                    <button class="btn-submit" onclick="publishNews()">Publish to Site</button>
+                </div>
+
+                <!-- TAB 2: REVEAL USER DATA -->
+                <div id="users-tab" class="tab-content" style="display: none;">
+                    <h4>User Registrations Database (Owner Eyes Only)</h4>
+                    <div class="table-wrap">
+                        <table class="user-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Pass / Auth</th>
+                                    <th>Provider</th>
+                                    <th>Joined</th>
+                                    <th>IP Address</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-rows">
+                                <!-- Dynamic Users -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2026 NEWS GRID -->
+            <section id="news-feed">
+                <div class="section-title">
+                    <h3>2026 LATEST REPORTS</h3>
+                </div>
+                <div id="news-grid" class="cards-list">
+                    <!-- Dynamic Articles -->
+                </div>
+            </section>
+
         </main>
 
-        <!-- EMOJI QUICK BAR -->
-        <div class="emoji-bar">
-            <span onclick="addEmoji('❤️')">❤️</span>
-            <span onclick="addEmoji('😂')">😂</span>
-            <span onclick="addEmoji('👍')">👍</span>
-            <span onclick="addEmoji('🙏')">🙏</span>
-            <span onclick="addEmoji('🎉')">🎉</span>
-            <span onclick="addEmoji('🔥')">🔥</span>
-            <span onclick="addEmoji('😊')">😊</span>
-        </div>
-
-        <!-- INPUT FOOTER -->
-        <footer class="chat-footer">
-            <label for="media-input" class="attach-btn" title="Attach Photo/Video">📎</label>
-            <input type="file" id="media-input" accept="image/*,video/*" onchange="handleFileSelect()" style="display: none;">
+        <!-- RIGHT SIDEBAR -->
+        <aside class="right-column">
             
-            <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
-            <button class="send-btn" onclick="sendMessage()">Send</button>
-        </footer>
-        <div id="file-preview-indicator" class="file-indicator" style="display: none;"></div>
+            <!-- MASTER LOGIN WIDGET -->
+            <div class="widget-card owner-login-widget">
+                <h4><i class="fa-solid fa-key"></i> Master / Owner Login</h4>
+                <p>Owner can enter passkey to manage site and inspect user signups.</p>
+                <input type="password" id="owner-key-input" placeholder="Enter Owner Key (owner123)">
+                <button onclick="loginAsOwner()">Unlock Owner Panel</button>
+            </div>
+
+            <!-- TRENDING WIDGET -->
+            <div class="widget-card">
+                <h4>TRENDING 2026 STORIES</h4>
+                <ul class="trending-list">
+                    <li><a href="#">Digital media reforms approved for local news publishers</a></li>
+                    <li><a href="#">New canal water distribution schedule for farmers</a></li>
+                    <li><a href="#">Punjab education board updates syllabus for 2026</a></li>
+                </ul>
+            </div>
+
+            <!-- ADVERTISING BANNER -->
+            <div class="widget-card ad-card">
+                <h3>NAGARBANI DIGITAL</h3>
+                <p>Reach thousands of local readers across Punjab.</p>
+            </div>
+
+        </aside>
+    </div>
+
+    <!-- ARTICLE DETAIL MODAL POPUP -->
+    <div id="article-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal('article-modal')">&times;</span>
+            <span class="badge" id="modal-cat">Category</span>
+            <h2 id="modal-title">Article Headline</h2>
+            <p class="modal-meta" id="modal-date">Aug 2026</p>
+            <div id="modal-media"></div>
+            <div class="modal-body-text" id="modal-body">Full article text...</div>
+        </div>
+    </div>
+
+    <!-- AUTHENTICATION MODAL (LOGIN / SIGNUP) -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content auth-box">
+            <span class="close-modal" onclick="closeModal('auth-modal')">&times;</span>
+            
+            <div id="login-form-wrap">
+                <h3>Account Login</h3>
+                <input type="email" id="login-email" placeholder="Email Address">
+                <input type="password" id="login-password" placeholder="Password">
+                <button class="btn-submit" onclick="loginUser()">Log In</button>
+                <div class="divider">OR</div>
+                <button class="btn-google" onclick="googleAuth()"><i class="fa-brands fa-google"></i> Continue with Google</button>
+                <p class="auth-switch">Don't have an account? <a href="#" onclick="toggleAuthForms('signup')">Sign Up</a></p>
+            </div>
+
+            <div id="signup-form-wrap" style="display: none;">
+                <h3>Create Account</h3>
+                <input type="text" id="signup-name" placeholder="Full Name">
+                <input type="email" id="signup-email" placeholder="Email Address">
+                <input type="password" id="signup-password" placeholder="Create Password">
+                <button class="btn-submit" onclick="signupUser()">Sign Up</button>
+                <div class="divider">OR</div>
+                <button class="btn-google" onclick="googleAuth()"><i class="fa-brands fa-google"></i> Sign Up with Google</button>
+                <p class="auth-switch">Already have an account? <a href="#" onclick="toggleAuthForms('login')">Log In</a></p>
+            </div>
+
+        </div>
     </div>
 
     <script src="/static/script.js"></script>
