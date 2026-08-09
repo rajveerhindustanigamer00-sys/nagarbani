@@ -5,7 +5,7 @@ from datetime import datetime
 app = Flask(__name__)
 
 # PASSCODES
-OWNER_PASSCODE = "owner123"
+OWNER_PASSCODE = "rajveer123"
 MEMBER_PASSCODE = "family123"
 
 # UPLOAD DIRECTORY FOR MEDIA
