@@ -3,49 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family Chatroom</title>
+    <title>Family Chat</title>
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-    <header class="main-header">
-        <h1>🏡 Family Chatroom</h1>
-        <p>A private space for family to connect & chat</p>
-    </header>
+    <!-- LOGIN PANEL -->
+    <div id="login-section" class="center-wrapper">
+        <div class="card login-card">
+            <h2>💬 Family Chat</h2>
+            <p>Enter your name & passcode to join</p>
+            <input type="text" id="username-input" placeholder="Your Name (e.g. Papa, Rajveer)">
+            <input type="password" id="passcode-input" placeholder="Passcode (Owner or Member)">
+            <button onclick="joinChat()">Join Room</button>
+        </div>
+    </div>
 
-    <main class="chat-container">
-        <!-- JOIN SCREEN -->
-        <div id="login-section" class="card">
-            <h2>Enter Family Room</h2>
-            <p>Enter your name and family passcode to join.</p>
-            <input type="text" id="username-input" placeholder="Your Name (e.g. Papa, Rajveer, Didi)">
-            <input type="password" id="passcode-input" placeholder="Enter Family Passcode">
-            <button onclick="joinChat()">Join Chat</button>
+    <!-- MAIN CHAT INTERFACE -->
+    <div id="chat-section" class="chat-app" style="display: none;">
+        <header class="chat-navbar">
+            <div class="user-info">
+                <span class="avatar">👨‍👩‍👧‍👦</span>
+                <div>
+                    <h3 id="user-display-name">Family Group</h3>
+                    <small id="user-role-badge" class="badge">Member</small>
+                </div>
+            </div>
+            <div class="nav-actions">
+                <button id="owner-panel-btn" class="btn-owner" onclick="toggleAdminPanel()" style="display: none;">👑 Owner Controls</button>
+                <button class="btn-logout" onclick="leaveChat()">Leave</button>
+            </div>
+        </header>
+
+        <!-- OWNER ADMIN PANEL MODAL -->
+        <div id="admin-panel" class="admin-panel" style="display: none;">
+            <h3>👑 Owner Dashboard (User Activity & Logs)</h3>
+            <div id="admin-user-list" class="user-list">
+                <!-- User logs loaded here -->
+            </div>
         </div>
 
-        <!-- CHATROOM INTERFACE -->
-        <div id="chat-section" class="card" style="display: none;">
-            <div class="chat-header">
-                <h3>Welcome, <span id="user-display"></span>!</h3>
-                <button class="btn-leave" onclick="leaveChat()">Leave Chat</button>
-            </div>
+        <!-- MESSAGES DISPLAY AREA -->
+        <main id="chat-box" class="chat-body">
+            <!-- Messages render here -->
+        </main>
 
-            <!-- MESSAGES BOX -->
-            <div id="chat-box" class="chat-box">
-                <!-- Messages will load here automatically -->
-            </div>
-
-            <!-- SEND MESSAGE FORM -->
-            <div class="chat-input-area">
-                <input type="text" id="message-input" placeholder="Type a family message..." onkeypress="handleKeyPress(event)">
-                <button onclick="sendMessage()">Send</button>
-            </div>
+        <!-- EMOJI QUICK BAR -->
+        <div class="emoji-bar">
+            <span onclick="addEmoji('❤️')">❤️</span>
+            <span onclick="addEmoji('😂')">😂</span>
+            <span onclick="addEmoji('👍')">👍</span>
+            <span onclick="addEmoji('🙏')">🙏</span>
+            <span onclick="addEmoji('🎉')">🎉</span>
+            <span onclick="addEmoji('🔥')">🔥</span>
+            <span onclick="addEmoji('😊')">😊</span>
         </div>
-    </main>
 
-    <footer class="main-footer">
-        <p>Private Family Chat • Nagarbani Portal</p>
-    </footer>
+        <!-- INPUT FOOTER -->
+        <footer class="chat-footer">
+            <label for="media-input" class="attach-btn" title="Attach Photo/Video">📎</label>
+            <input type="file" id="media-input" accept="image/*,video/*" onchange="handleFileSelect()" style="display: none;">
+            
+            <input type="text" id="message-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+            <button class="send-btn" onclick="sendMessage()">Send</button>
+        </footer>
+        <div id="file-preview-indicator" class="file-indicator" style="display: none;"></div>
+    </div>
 
     <script src="/static/script.js"></script>
 </body>
