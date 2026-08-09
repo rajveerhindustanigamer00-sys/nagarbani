@@ -2,7 +2,6 @@ let currentOwnerPasscode = "";
 let loadedArticles = [];
 let leadArticle = null;
 
-// --- MODAL CONTROLS ---
 function openAuthModal(type) {
     document.getElementById('auth-modal').style.display = 'flex';
     toggleAuthForms(type);
@@ -31,7 +30,6 @@ function switchTab(tabId) {
     btns[1].classList.toggle('active', tabId === 'users-tab');
 }
 
-// --- AUTHENTICATION API ---
 async function signupUser() {
     const name = document.getElementById('signup-name').value.trim();
     const email = document.getElementById('signup-email').value.trim();
@@ -80,8 +78,8 @@ async function loginUser() {
 }
 
 async function googleAuth() {
-    const mockEmail = `user_${Math.floor(Math.random()*1000)}@gmail.com`;
-    const mockName = "Google Verified User";
+    const mockEmail = `reader_${Math.floor(Math.random()*1000)}@gmail.com`;
+    const mockName = "Google Reader";
 
     const res = await fetch('/api/signup', {
         method: 'POST',
@@ -96,14 +94,13 @@ async function googleAuth() {
 
 function updateUserBar(userName) {
     document.getElementById('user-status-bar').innerHTML = `
-        <span style="color:#00ffcc; font-weight:bold;"><i class="fa-solid fa-circle-user"></i> ${userName}</span>
+        <span style="color:#ffcc00; font-weight:bold;"><i class="fa-solid fa-circle-user"></i> ${userName}</span>
     `;
 }
 
-// --- OWNER MASTER PANEL ---
 async function loginAsOwner() {
     const key = document.getElementById('owner-key-input').value.trim();
-    if (!key) return alert("Enter owner key.");
+    if (!key) return alert("Enter owner passcode.");
 
     try {
         const res = await fetch('/api/login', {
@@ -115,13 +112,14 @@ async function loginAsOwner() {
 
         if (res.ok && data.role === 'owner') {
             currentOwnerPasscode = key;
-            document.getElementById('owner-badge').style.display = 'block';
             document.getElementById('owner-panel-section').style.display = 'block';
             document.getElementById('nav-owner-link').style.display = 'inline-block';
+            document.getElementById('hero-delete-btn').style.display = 'inline-block';
             alert("Owner Access Unlocked!");
             renderUserTable(data.users_registry);
+            loadNewsFeed();
         } else {
-            alert("Invalid Owner Key!");
+            alert("Invalid Owner Passcode!");
         }
     } catch (e) {
         alert("Error logging in as owner.");
@@ -137,7 +135,7 @@ function renderUserTable(users) {
                 <td>${u.id}</td>
                 <td>${u.name}</td>
                 <td>${u.email}</td>
-                <td style="color:#cc0000; font-weight:bold;">${u.password || 'OAuth'}</td>
+                <td style="color:#8b0000; font-weight:bold;">${u.password || 'OAuth'}</td>
                 <td>${u.provider || 'Direct'}</td>
                 <td>${u.joined}</td>
                 <td>${u.last_login_ip}</td>
@@ -146,7 +144,6 @@ function renderUserTable(users) {
     });
 }
 
-// --- NEWS FEED API ---
 async function publishNews() {
     const title = document.getElementById('post-title').value.trim();
     const category = document.getElementById('post-cat').value;
@@ -168,7 +165,7 @@ async function publishNews() {
         const res = await fetch('/api/publish', { method: 'POST', body: formData });
         const data = await res.json();
         if (res.ok) {
-            alert("Published!");
+            alert("News Published!");
             document.getElementById('post-title').value = "";
             document.getElementById('post-body').value = "";
             loadNewsFeed();
@@ -180,12 +177,37 @@ async function publishNews() {
     }
 }
 
+async function deleteArticle(articleId) {
+    if (!confirm("Are you sure you want to delete this news article?")) return;
+
+    try {
+        const res = await fetch('/api/delete_news', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: currentOwnerPasscode, article_id: articleId })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.message);
+            loadNewsFeed();
+        } else {
+            alert(data.message);
+        }
+    } catch (e) {
+        alert("Delete failed");
+    }
+}
+
 async function loadNewsFeed() {
     try {
         const res = await fetch('/api/get_news');
         loadedArticles = await res.json();
 
-        if (loadedArticles.length === 0) return;
+        if (loadedArticles.length === 0) {
+            document.getElementById('hero-title').innerText = "No News Available";
+            document.getElementById('news-grid').innerHTML = "<p>No articles found.</p>";
+            return;
+        }
 
         leadArticle = loadedArticles[0];
         document.getElementById('hero-title').innerText = leadArticle.title;
@@ -203,7 +225,6 @@ async function loadNewsFeed() {
             }
         }
 
-        // Render feed list
         const grid = document.getElementById('news-grid');
         grid.innerHTML = "";
         loadedArticles.slice(1).forEach(art => {
@@ -216,14 +237,20 @@ async function loadNewsFeed() {
                 }
             }
 
+            const deleteBtnHTML = currentOwnerPasscode ? 
+                `<button class="btn-delete-owner" onclick="event.stopPropagation(); deleteArticle(${art.id})">Delete</button>` : '';
+
             grid.innerHTML += `
                 <div class="news-card" onclick="openArticleModal(${art.id})">
                     ${mediaHTML}
-                    <div class="news-card-body">
+                    <div class="news-card-body" style="width:100%;">
                         <span class="badge">${art.category}</span>
                         <h4>${art.title}</h4>
                         <p>${art.summary}</p>
-                        <small style="color:#888;">${art.date}</small>
+                        <div class="card-actions-flex">
+                            <small style="color:#888;">${art.date}</small>
+                            ${deleteBtnHTML}
+                        </div>
                     </div>
                 </div>
             `;
@@ -253,9 +280,9 @@ function showArticleModal(art) {
     mediaWrap.innerHTML = "";
     if (art.media_url) {
         if (art.media_type === 'video') {
-            mediaWrap.innerHTML = `<video src="${art.media_url}" controls style="width:100%; border-radius:6px; margin:10px 0;"></video>`;
+            mediaWrap.innerHTML = `<video src="${art.media_url}" controls style="width:100%; margin:10px 0;"></video>`;
         } else {
-            mediaWrap.innerHTML = `<img src="${art.media_url}" style="width:100%; border-radius:6px; margin:10px 0;" />`;
+            mediaWrap.innerHTML = `<img src="${art.media_url}" style="width:100%; margin:10px 0;" />`;
         }
     }
 
