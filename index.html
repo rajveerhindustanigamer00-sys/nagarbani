@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NAGARBANI DIGITAL PORTAL - 2026 News Feed</title>
+    <title>NAGAR BANI - Official Digital Newspaper</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -12,7 +12,7 @@
     <!-- TOP BAR -->
     <div class="top-header">
         <div class="container top-flex">
-            <div><i class="fa-regular fa-calendar"></i> <span id="live-date">Sunday, Aug 9, 2026</span></div>
+            <div><i class="fa-regular fa-calendar-days"></i> <span id="live-date">Sunday, Aug 9, 2026</span> | <span class="edition">PUNJAB EDITION</span></div>
             <div id="user-status-bar">
                 <button class="auth-btn" onclick="openAuthModal('login')"><i class="fa-solid fa-right-to-bracket"></i> Login</button>
                 <button class="auth-btn register-btn" onclick="openAuthModal('signup')"><i class="fa-solid fa-user-plus"></i> Sign Up</button>
@@ -20,15 +20,21 @@
         </div>
     </div>
 
-    <!-- MAIN BRAND HEADER -->
+    <!-- MAIN BRAND HEADER & TOP AD -->
     <header class="brand-header">
         <div class="container header-flex">
             <div class="logo">
-                <h1>NAGARBANI <span>NEWS</span></h1>
-                <p>2026 Digital Media & Local News Portal</p>
+                <h1>NAGAR <span>BANI</span></h1>
+                <p>Voice of the People • Verified News Network</p>
             </div>
-            <div class="master-badge" id="owner-badge" style="display:none;">
-                <i class="fa-solid fa-crown"></i> OWNER MASTER ACCOUNT ACTIVE
+            
+            <!-- NEWSPAPER TOP AD BANNER -->
+            <div class="ad-banner-top">
+                <span class="ad-tag">ADVERTISEMENT</span>
+                <div class="ad-content">
+                    <h4>PUNJAB STATE TRACTORS & MACHINERY</h4>
+                    <p>Special August 2026 Offers • Call 1800-000-999</p>
+                </div>
             </div>
         </div>
     </header>
@@ -37,40 +43,53 @@
     <nav class="nav-bar">
         <div class="container nav-flex">
             <a href="#" class="active"><i class="fa-solid fa-house"></i> Home</a>
-            <a href="#news-feed">2026 Feed</a>
-            <a href="#video-feed">Video Reports</a>
+            <a href="#news-feed">Punjab News</a>
+            <a href="#news-feed">Local Bulletins</a>
+            <a href="#news-feed">Video Reports</a>
             <a href="#owner-panel-section" id="nav-owner-link" style="display:none;"><i class="fa-solid fa-user-gear"></i> Owner Dashboard</a>
         </div>
     </nav>
 
     <!-- TICKER -->
     <div class="ticker-box container">
-        <span class="ticker-label">BREAKING 2026</span>
+        <span class="ticker-label"><i class="fa-solid fa-bolt"></i> BREAKING NEWS</span>
         <marquee behavior="scroll" direction="left" id="ticker-text">
-            Welcome to Nagarbani Digital News • Log in to read full stories or sign up with Google • Owner panel enabled...
+            Welcome to Nagar Bani Official Digital Newspaper • Real-time verified local and state reports...
         </marquee>
     </div>
 
-    <!-- MAIN PORTAL BODY -->
+    <!-- MAIN CONTENT -->
     <div class="container portal-grid">
         
-        <!-- MAIN NEWS CONTENT -->
         <main class="left-column">
             
-            <!-- FEATURED HERO STORY -->
+            <!-- HERO STORY -->
             <section class="hero-card" id="hero-story">
-                <span class="badge" id="hero-cat">TOP NEWS</span>
+                <div class="card-header-flex">
+                    <span class="badge" id="hero-cat">TOP STORY</span>
+                    <span class="fact-check"><i class="fa-solid fa-circle-check"></i> VERIFIED BY NAGAR BANI DESK</span>
+                </div>
                 <h2 id="hero-title">Loading Featured Story...</h2>
                 <div class="meta" id="hero-meta"><i class="fa-regular fa-clock"></i> Aug 2026</div>
                 <div id="hero-media-wrap"></div>
-                <p id="hero-summary">Fetching the latest 2026 news articles...</p>
-                <button class="btn-read-more" onclick="openLeadModal()">Read Full Story <i class="fa-solid fa-arrow-right"></i></button>
+                <p id="hero-summary">Fetching verified newspaper reports...</p>
+                <div class="hero-actions">
+                    <button class="btn-read-more" onclick="openLeadModal()">Read Full Story <i class="fa-solid fa-arrow-right"></i></button>
+                    <button class="btn-delete-owner" id="hero-delete-btn" style="display:none;" onclick="deleteArticle(leadArticle.id)">Delete Article</button>
+                </div>
             </section>
 
-            <!-- OWNER DASHBOARD & PUBLISHER (Hidden until Owner Logs In) -->
+            <!-- IN-FEED NEWSPAPER AD -->
+            <div class="ad-horizontal">
+                <span class="ad-tag">SPONSORED ANNOUNCEMENT</span>
+                <h3>MUKTSAR DIGITAL EDUCATION EXPO 2026</h3>
+                <p>Admissions Open for Engineering, Tech & Agriculture Courses. Visit Local Campus Today.</p>
+            </div>
+
+            <!-- OWNER PANEL -->
             <section id="owner-panel-section" class="panel-box" style="display: none;">
                 <div class="panel-header">
-                    <h3><i class="fa-solid fa-user-shield"></i> OWNER MASTER CONTROL PANEL</h3>
+                    <h3><i class="fa-solid fa-user-shield"></i> NAGAR BANI OWNER CONTROL CENTER</h3>
                 </div>
                 
                 <div class="tabs">
@@ -78,27 +97,24 @@
                     <button class="tab-btn" onclick="switchTab('users-tab')">Registered Users Data</button>
                 </div>
 
-                <!-- TAB 1: PUBLISH NEWS -->
                 <div id="pub-tab" class="tab-content">
-                    <h4>Post New Article / Video</h4>
-                    <input type="text" id="post-title" placeholder="Story Headline">
+                    <h4>Post Article or Video Report</h4>
+                    <input type="text" id="post-title" placeholder="News Headline">
                     <div class="inline-inputs">
                         <select id="post-cat">
                             <option value="Punjab News">Punjab News</option>
                             <option value="Local News">Local News</option>
                             <option value="Video Report">Video Report</option>
-                            <option value="Government Notice">Government Notice</option>
                         </select>
                         <input type="file" id="post-file" accept="image/*,video/*">
                     </div>
-                    <textarea id="post-summary" rows="2" placeholder="Short Summary (shown in feed)..."></textarea>
-                    <textarea id="post-body" rows="5" placeholder="Full Article Body..."></textarea>
-                    <button class="btn-submit" onclick="publishNews()">Publish to Site</button>
+                    <textarea id="post-summary" rows="2" placeholder="Short summary..."></textarea>
+                    <textarea id="post-body" rows="5" placeholder="Full news report text..."></textarea>
+                    <button class="btn-submit" onclick="publishNews()">Publish News</button>
                 </div>
 
-                <!-- TAB 2: REVEAL USER DATA -->
                 <div id="users-tab" class="tab-content" style="display: none;">
-                    <h4>User Registrations Database (Owner Eyes Only)</h4>
+                    <h4>User Database</h4>
                     <div class="table-wrap">
                         <table class="user-table">
                             <thead>
@@ -106,94 +122,89 @@
                                     <th>ID</th>
                                     <th>Name</th>
                                     <th>Email</th>
-                                    <th>Pass / Auth</th>
+                                    <th>Pass/Token</th>
                                     <th>Provider</th>
                                     <th>Joined</th>
-                                    <th>IP Address</th>
+                                    <th>IP</th>
                                 </tr>
                             </thead>
-                            <tbody id="user-rows">
-                                <!-- Dynamic Users -->
-                            </tbody>
+                            <tbody id="user-rows"></tbody>
                         </table>
                     </div>
                 </div>
             </section>
 
-            <!-- 2026 NEWS GRID -->
+            <!-- NEWS FEED -->
             <section id="news-feed">
                 <div class="section-title">
-                    <h3>2026 LATEST REPORTS</h3>
+                    <h3>LATEST VERIFIED BULLETINS</h3>
                 </div>
-                <div id="news-grid" class="cards-list">
-                    <!-- Dynamic Articles -->
-                </div>
+                <div id="news-grid" class="cards-list"></div>
             </section>
 
         </main>
 
-        <!-- RIGHT SIDEBAR -->
+        <!-- RIGHT SIDEBAR ADS & LOGIN -->
         <aside class="right-column">
             
-            <!-- MASTER LOGIN WIDGET -->
             <div class="widget-card owner-login-widget">
-                <h4><i class="fa-solid fa-key"></i> Master / Owner Login</h4>
-                <p>Owner can enter passkey to manage site and inspect user signups.</p>
-                <input type="password" id="owner-key-input" placeholder="Enter Owner Key (owner123)">
-                <button onclick="loginAsOwner()">Unlock Owner Panel</button>
+                <h4><i class="fa-solid fa-key"></i> Nagar Bani Master Login</h4>
+                <p>Owner can enter passcode to manage content and inspect logins.</p>
+                <input type="password" id="owner-key-input" placeholder="Owner Passcode">
+                <button onclick="loginAsOwner()">Unlock Panel</button>
             </div>
 
-            <!-- TRENDING WIDGET -->
-            <div class="widget-card">
-                <h4>TRENDING 2026 STORIES</h4>
-                <ul class="trending-list">
-                    <li><a href="#">Digital media reforms approved for local news publishers</a></li>
-                    <li><a href="#">New canal water distribution schedule for farmers</a></li>
-                    <li><a href="#">Punjab education board updates syllabus for 2026</a></li>
-                </ul>
+            <!-- SIDEBAR AD 1 -->
+            <div class="widget-card ad-sidebar">
+                <span class="ad-tag">CLASSIFIED AD</span>
+                <h4>Giddarbaha Real Estate 2026</h4>
+                <p>Commercial Shops & Plots Available Near Main Highway.</p>
+                <button class="ad-btn">Contact Agent</button>
             </div>
 
-            <!-- ADVERTISING BANNER -->
-            <div class="widget-card ad-card">
-                <h3>NAGARBANI DIGITAL</h3>
-                <p>Reach thousands of local readers across Punjab.</p>
+            <!-- SIDEBAR AD 2 -->
+            <div class="widget-card ad-sidebar promo-box">
+                <span class="ad-tag">GOVERNMENT PUBLIC NOTICE</span>
+                <h4>Solar Energy Subsidy Scheme</h4>
+                <p>Apply for up to 40% subsidy on rooftop solar installation in Punjab.</p>
             </div>
 
         </aside>
     </div>
 
-    <!-- ARTICLE DETAIL MODAL POPUP -->
+    <!-- ARTICLE MODAL -->
     <div id="article-modal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="closeModal('article-modal')">&times;</span>
             <span class="badge" id="modal-cat">Category</span>
-            <h2 id="modal-title">Article Headline</h2>
+            <span class="fact-check"><i class="fa-solid fa-shield-halved"></i> Nagar Bani Verified</span>
+            <h2 id="modal-title">Headline</h2>
             <p class="modal-meta" id="modal-date">Aug 2026</p>
             <div id="modal-media"></div>
-            <div class="modal-body-text" id="modal-body">Full article text...</div>
+            <div class="modal-body-text" id="modal-body">Text...</div>
         </div>
     </div>
 
-    <!-- AUTHENTICATION MODAL (LOGIN / SIGNUP) -->
+    <!-- AUTH MODAL -->
     <div id="auth-modal" class="modal">
         <div class="modal-content auth-box">
             <span class="close-modal" onclick="closeModal('auth-modal')">&times;</span>
             
             <div id="login-form-wrap">
-                <h3>Account Login</h3>
-                <input type="email" id="login-email" placeholder="Email Address">
+                <h3>Login</h3>
+                <input type="email" id="login-email" placeholder="Email">
                 <input type="password" id="login-password" placeholder="Password">
                 <button class="btn-submit" onclick="loginUser()">Log In</button>
                 <div class="divider">OR</div>
-                <button class="btn-google" onclick="googleAuth()"><i class="fa-brands fa-google"></i> Continue with Google</button>
+                <button class="btn-google" onclick="googleAuth()"><i class="fa-brands fa-google"></i> Sign In with Google</button>
                 <p class="auth-switch">Don't have an account? <a href="#" onclick="toggleAuthForms('signup')">Sign Up</a></p>
             </div>
 
             <div id="signup-form-wrap" style="display: none;">
-                <h3>Create Account</h3>
+                <h3>Sign Up</h3>
                 <input type="text" id="signup-name" placeholder="Full Name">
                 <input type="email" id="signup-email" placeholder="Email Address">
-                <input type="password" id="signup-password" placeholder="Create Password">
+                <input type="password" id="signup-password" placeholder="Password">
                 <button class="btn-submit" onclick="signupUser()">Sign Up</button>
                 <div class="divider">OR</div>
                 <button class="btn-google" onclick="googleAuth()"><i class="fa-brands fa-google"></i> Sign Up with Google</button>
