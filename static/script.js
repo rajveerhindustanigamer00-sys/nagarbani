@@ -1,76 +1,97 @@
-// 1. ACCESS CONTROL: Unlocks the Admin Dashboard
-function checkAccess() {
-    const passwordInput = document.getElementById('password').value;
-    
-    if (passwordInput === "admin123") {
-        // Hides the login box and shows the admin tools
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('admin-dashboard').style.display = 'block';
-        alert("Nagarbani News Admin Access Granted!");
-    } else {
-        alert("Incorrect Security Key.");
-    }
-}
+let currentUser = "";
+let pollInterval = null;
 
-// 2. PUBLISHING: Sends News and Videos to the Engine
-async function uploadContent() {
-    const headline = document.getElementById('headline-input').value;
-    const news = document.getElementById('news-input').value;
-    const videoFile = document.getElementById('video-input').files;
+async function joinChat() {
+    const username = document.getElementById('username-input').value.trim();
+    const passcode = document.getElementById('passcode-input').value.trim();
 
-    if (!headline || !videoFile) {
-        alert("Please provide a headline and a video file.");
+    if (!username || !passcode) {
+        alert("Please enter both your name and passcode.");
         return;
     }
 
-    // Using FormData to bundle text and video for the Fetch API [1]
-    const formData = new FormData();
-    formData.append('headline', headline);
-    formData.append('news', news);
-    formData.append('video', videoFile);
-
     try {
-        const response = await fetch('http://127.0.0.1:5000/upload', {
+        const response = await fetch('/login', {
             method: 'POST',
-            body: formData
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, passcode: passcode })
         });
 
         const result = await response.json();
-        alert(result.message); // Should say "Content Published!"
-        
-        // Refresh the gallery automatically to show the new post
-        loadGallery();
+
+        if (response.ok) {
+            currentUser = username;
+            document.getElementById('user-display').innerText = currentUser;
+            document.getElementById('login-section').style.display = 'none';
+            document.getElementById('chat-section').style.display = 'block';
+
+            loadMessages();
+            // Automatically check for new messages every 2 seconds
+            pollInterval = setInterval(loadMessages, 2000);
+        } else {
+            alert(result.message);
+        }
     } catch (error) {
-        console.error("Publishing Error:", error);
-        alert("Failed to reach Nagarbani Engine. Check if app.py is running.");
+        alert("Could not connect to server.");
     }
 }
 
-// 3. GALLERY: Fetches and displays all uploaded reports
-async function loadGallery() {
+async function sendMessage() {
+    const input = document.getElementById('message-input');
+    const text = input.value.trim();
+
+    if (!text) return;
+
     try {
-        const response = await fetch('http://127.0.0.1:5000/list_content');
-        const files = await response.json();
-        const gallery = document.getElementById('video-gallery');
-        
-        gallery.innerHTML = ""; // Clear the gallery before reloading
-
-        files.forEach(file => {
-            // Creates a fancy card for each video report
-            const card = `
-                <div class="video-item card">
-                    <h3>${file.split('.').replace(/-/g, ' ')}</h3>
-                    <video controls>
-                        <source src="/uploads/${file}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>`;
-            gallery.innerHTML += card;
+        const response = await fetch('/send_message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user: currentUser, text: text })
         });
+
+        if (response.ok) {
+            input.value = "";
+            loadMessages();
+        }
     } catch (error) {
-        console.log("Gallery is empty or engine is offline.");
+        console.error("Sending error:", error);
     }
 }
 
-// 4. AUTO-LOAD: Shows the news as soon as the site opens [2]
-window.onload = loadGallery;
+async function loadMessages() {
+    try {
+        const response = await fetch('/get_messages');
+        const messages = await response.json();
+        const chatBox = document.getElementById('chat-box');
+
+        chatBox.innerHTML = "";
+        messages.forEach(msg => {
+            chatBox.innerHTML += `
+                <div class="msg-item">
+                    <div class="msg-header">
+                        <span class="msg-user">${msg.user}</span>
+                        <span>${msg.time}</span>
+                    </div>
+                    <div class="msg-text">${msg.text}</div>
+                </div>
+            `;
+        });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+    } catch (error) {
+        console.error("Loading error:", error);
+    }
+}
+
+function handleKeyPress(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+}
+
+function leaveChat() {
+    clearInterval(pollInterval);
+    document.getElementById('login-section').style.display = 'block';
+    document.getElementById('chat-section').style.display = 'none';
+    currentUser = "";
+}
