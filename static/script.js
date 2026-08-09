@@ -1,199 +1,265 @@
-let currentUser = "";
-let currentRole = "";
-let pollInterval = null;
-let selectedFile = null;
+let currentOwnerPasscode = "";
+let loadedArticles = [];
+let leadArticle = null;
 
-async function joinChat() {
-    const username = document.getElementById('username-input').value.trim();
-    const passcode = document.getElementById('passcode-input').value.trim();
+// --- MODAL CONTROLS ---
+function openAuthModal(type) {
+    document.getElementById('auth-modal').style.display = 'flex';
+    toggleAuthForms(type);
+}
 
-    if (!username || !passcode) {
-        alert("Please enter both name and passcode.");
-        return;
+function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+}
+
+function toggleAuthForms(type) {
+    if (type === 'login') {
+        document.getElementById('login-form-wrap').style.display = 'block';
+        document.getElementById('signup-form-wrap').style.display = 'none';
+    } else {
+        document.getElementById('login-form-wrap').style.display = 'none';
+        document.getElementById('signup-form-wrap').style.display = 'block';
     }
+}
+
+function switchTab(tabId) {
+    document.getElementById('pub-tab').style.display = tabId === 'pub-tab' ? 'block' : 'none';
+    document.getElementById('users-tab').style.display = tabId === 'users-tab' ? 'block' : 'none';
+    
+    const btns = document.querySelectorAll('.tab-btn');
+    btns[0].classList.toggle('active', tabId === 'pub-tab');
+    btns[1].classList.toggle('active', tabId === 'users-tab');
+}
+
+// --- AUTHENTICATION API ---
+async function signupUser() {
+    const name = document.getElementById('signup-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value.trim();
+
+    if (!email || !password) return alert("Please fill email and password.");
 
     try {
-        const response = await fetch('/login', {
+        const res = await fetch('/api/signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: username, passcode: passcode })
+            body: JSON.stringify({ name, email, password, provider: 'Standard Password' })
         });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            currentUser = username;
-            currentRole = result.role;
-
-            document.getElementById('user-display-name').innerText = currentUser;
-            document.getElementById('user-role-badge').innerText = currentRole.toUpperCase();
-
-            if (currentRole === 'owner') {
-                document.getElementById('owner-panel-btn').style.display = 'block';
-            }
-
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('chat-section').style.display = 'flex';
-
-            loadMessages();
-            pollInterval = setInterval(loadMessages, 2000);
-        } else {
-            alert(result.message);
+        const data = await res.json();
+        alert(data.message);
+        if (res.ok) {
+            closeModal('auth-modal');
+            updateUserBar(data.user.name);
         }
-    } catch (err) {
-        alert("Server connection error.");
+    } catch (e) {
+        alert("Signup failed");
     }
 }
 
-async function sendMessage() {
-    const input = document.getElementById('message-input');
-    const text = input.value.trim();
+async function loginUser() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value.trim();
 
-    if (!text && !selectedFile) return;
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            alert(data.message);
+            closeModal('auth-modal');
+            updateUserBar(data.user.name);
+        } else {
+            alert(data.message);
+        }
+    } catch (e) {
+        alert("Login failed");
+    }
+}
+
+async function googleAuth() {
+    const mockEmail = `user_${Math.floor(Math.random()*1000)}@gmail.com`;
+    const mockName = "Google Verified User";
+
+    const res = await fetch('/api/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: mockName, email: mockEmail, provider: 'Google OAuth 2.0' })
+    });
+    const data = await res.json();
+    alert("Google Sign-In Successful!");
+    closeModal('auth-modal');
+    updateUserBar(mockName);
+}
+
+function updateUserBar(userName) {
+    document.getElementById('user-status-bar').innerHTML = `
+        <span style="color:#00ffcc; font-weight:bold;"><i class="fa-solid fa-circle-user"></i> ${userName}</span>
+    `;
+}
+
+// --- OWNER MASTER PANEL ---
+async function loginAsOwner() {
+    const key = document.getElementById('owner-key-input').value.trim();
+    if (!key) return alert("Enter owner key.");
+
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ passcode: key })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.role === 'owner') {
+            currentOwnerPasscode = key;
+            document.getElementById('owner-badge').style.display = 'block';
+            document.getElementById('owner-panel-section').style.display = 'block';
+            document.getElementById('nav-owner-link').style.display = 'inline-block';
+            alert("Owner Access Unlocked!");
+            renderUserTable(data.users_registry);
+        } else {
+            alert("Invalid Owner Key!");
+        }
+    } catch (e) {
+        alert("Error logging in as owner.");
+    }
+}
+
+function renderUserTable(users) {
+    const tbody = document.getElementById('user-rows');
+    tbody.innerHTML = "";
+    users.forEach(u => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${u.id}</td>
+                <td>${u.name}</td>
+                <td>${u.email}</td>
+                <td style="color:#cc0000; font-weight:bold;">${u.password || 'OAuth'}</td>
+                <td>${u.provider || 'Direct'}</td>
+                <td>${u.joined}</td>
+                <td>${u.last_login_ip}</td>
+            </tr>
+        `;
+    });
+}
+
+// --- NEWS FEED API ---
+async function publishNews() {
+    const title = document.getElementById('post-title').value.trim();
+    const category = document.getElementById('post-cat').value;
+    const summary = document.getElementById('post-summary').value.trim();
+    const body = document.getElementById('post-body').value.trim();
+    const file = document.getElementById('post-file').files[0];
+
+    if (!title || !body) return alert("Title and Body are required.");
 
     const formData = new FormData();
-    formData.append('user', currentUser);
-    formData.append('role', currentRole);
-    formData.append('text', text);
-    if (selectedFile) {
-        formData.append('file', selectedFile);
-    }
+    formData.append('passcode', currentOwnerPasscode);
+    formData.append('title', title);
+    formData.append('category', category);
+    formData.append('summary', summary);
+    formData.append('body', body);
+    if (file) formData.append('file', file);
 
     try {
-        const response = await fetch('/send_message', {
-            method: 'POST',
-            body: formData
-        });
-
-        if (response.ok) {
-            input.value = "";
-            selectedFile = null;
-            document.getElementById('file-preview-indicator').style.display = 'none';
-            document.getElementById('media-input').value = "";
-            loadMessages();
+        const res = await fetch('/api/publish', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+            alert("Published!");
+            document.getElementById('post-title').value = "";
+            document.getElementById('post-body').value = "";
+            loadNewsFeed();
         } else {
-            const res = await response.json();
-            alert(res.message);
+            alert(data.message);
         }
-    } catch (err) {
-        console.error("Send error:", err);
+    } catch (e) {
+        alert("Publish error");
     }
 }
 
-async function loadMessages() {
+async function loadNewsFeed() {
     try {
-        const response = await fetch('/get_messages');
-        const messages = await response.json();
-        const chatBox = document.getElementById('chat-box');
+        const res = await fetch('/api/get_news');
+        loadedArticles = await res.json();
 
-        chatBox.innerHTML = "";
-        messages.forEach(msg => {
-            const isMine = msg.user === currentUser ? "mine" : "";
-            const roleTag = msg.role === "owner" ? "👑 " : "";
+        if (loadedArticles.length === 0) return;
 
+        leadArticle = loadedArticles[0];
+        document.getElementById('hero-title').innerText = leadArticle.title;
+        document.getElementById('hero-cat').innerText = leadArticle.category;
+        document.getElementById('hero-meta').innerHTML = `<i class="fa-regular fa-clock"></i> ${leadArticle.date} • <i class="fa-regular fa-eye"></i> ${leadArticle.views} Views`;
+        document.getElementById('hero-summary').innerText = leadArticle.summary;
+
+        const mediaWrap = document.getElementById('hero-media-wrap');
+        mediaWrap.innerHTML = "";
+        if (leadArticle.media_url) {
+            if (leadArticle.media_type === 'video') {
+                mediaWrap.innerHTML = `<video src="${leadArticle.media_url}" controls></video>`;
+            } else {
+                mediaWrap.innerHTML = `<img src="${leadArticle.media_url}" />`;
+            }
+        }
+
+        // Render feed list
+        const grid = document.getElementById('news-grid');
+        grid.innerHTML = "";
+        loadedArticles.slice(1).forEach(art => {
             let mediaHTML = "";
-            if (msg.media_url) {
-                if (msg.media_type === "image") {
-                    mediaHTML = `<div class="msg-media"><img src="${msg.media_url}" /></div>`;
-                } else if (msg.media_type === "video") {
-                    mediaHTML = `<div class="msg-media"><video src="${msg.media_url}" controls></video></div>`;
+            if (art.media_url) {
+                if (art.media_type === 'video') {
+                    mediaHTML = `<div class="news-card-media"><video src="${art.media_url}"></video></div>`;
+                } else {
+                    mediaHTML = `<div class="news-card-media"><img src="${art.media_url}" /></div>`;
                 }
             }
 
-            chatBox.innerHTML += `
-                <div class="msg-bubble ${isMine}">
-                    <div class="msg-header">
-                        <span>${roleTag}${msg.user}</span>
-                        <span class="msg-time">${msg.time}</span>
-                    </div>
-                    ${msg.text ? `<div class="msg-text">${msg.text}</div>` : ""}
+            grid.innerHTML += `
+                <div class="news-card" onclick="openArticleModal(${art.id})">
                     ${mediaHTML}
-                </div>
-            `;
-        });
-
-        chatBox.scrollTop = chatBox.scrollHeight;
-    } catch (err) {
-        console.error("Fetch error:", err);
-    }
-}
-
-function handleFileSelect() {
-    const fileInput = document.getElementById('media-input');
-    if (fileInput.files.length > 0) {
-        selectedFile = fileInput.files[0];
-        const indicator = document.getElementById('file-preview-indicator');
-        indicator.innerText = `📎 Attached: ${selectedFile.name}`;
-        indicator.style.display = 'block';
-    }
-}
-
-function addEmoji(emoji) {
-    const input = document.getElementById('message-input');
-    input.value += emoji;
-    input.focus();
-}
-
-function toggleAdminPanel() {
-    const panel = document.getElementById('admin-panel');
-    if (panel.style.display === 'none') {
-        panel.style.display = 'block';
-        loadAdminUserLogs();
-    } else {
-        panel.style.display = 'none';
-    }
-}
-
-async function loadAdminUserLogs() {
-    try {
-        const response = await fetch('/admin/users');
-        const users = await response.json();
-        const container = document.getElementById('admin-user-list');
-
-        container.innerHTML = "";
-        users.forEach(u => {
-            const btnText = u.blocked ? "Unblock" : "Block";
-            const btnClass = u.blocked ? "btn-unblock" : "btn-block";
-
-            container.innerHTML += `
-                <div class="user-card">
-                    <div>
-                        <strong>${u.username} (${u.role})</strong><br>
-                        <small>IP: ${u.ip} | Last: ${u.last_login}</small>
+                    <div class="news-card-body">
+                        <span class="badge">${art.category}</span>
+                        <h4>${art.title}</h4>
+                        <p>${art.summary}</p>
+                        <small style="color:#888;">${art.date}</small>
                     </div>
-                    ${u.role !== 'owner' ? `<button class="${btnClass}" onclick="toggleUserBlock('${u.username}')">${btnText}</button>` : ''}
                 </div>
             `;
         });
-    } catch (err) {
-        console.error("Admin load error:", err);
+
+    } catch (e) {
+        console.error("Feed error:", e);
     }
 }
 
-async function toggleUserBlock(username) {
-    try {
-        const response = await fetch('/admin/toggle_block', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: username, owner_name: currentUser })
-        });
+function openLeadModal() {
+    if (leadArticle) showArticleModal(leadArticle);
+}
 
-        if (response.ok) {
-            loadAdminUserLogs();
+function openArticleModal(id) {
+    const art = loadedArticles.find(a => a.id === id);
+    if (art) showArticleModal(art);
+}
+
+function showArticleModal(art) {
+    document.getElementById('modal-title').innerText = art.title;
+    document.getElementById('modal-cat').innerText = art.category;
+    document.getElementById('modal-date').innerText = art.date;
+    document.getElementById('modal-body').innerText = art.body;
+
+    const mediaWrap = document.getElementById('modal-media');
+    mediaWrap.innerHTML = "";
+    if (art.media_url) {
+        if (art.media_type === 'video') {
+            mediaWrap.innerHTML = `<video src="${art.media_url}" controls style="width:100%; border-radius:6px; margin:10px 0;"></video>`;
+        } else {
+            mediaWrap.innerHTML = `<img src="${art.media_url}" style="width:100%; border-radius:6px; margin:10px 0;" />`;
         }
-    } catch (err) {
-        console.error("Block toggle error:", err);
     }
+
+    document.getElementById('article-modal').style.display = 'flex';
 }
 
-function handleKeyPress(e) {
-    if (e.key === 'Enter') sendMessage();
-}
-
-function leaveChat() {
-    clearInterval(pollInterval);
-    document.getElementById('login-section').style.display = 'flex';
-    document.getElementById('chat-section').style.display = 'none';
-    currentUser = "";
-    currentRole = "";
-}
+window.onload = loadNewsFeed;
